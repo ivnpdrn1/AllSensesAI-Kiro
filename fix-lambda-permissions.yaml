@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Fix AllSenses Lambda Function URL Permissions'
+
+Resources:
+  # Update the existing Lambda function URL to allow public access
+  AllSensesFunctionUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: AllSenses-Live-MVP-AllSensesFunction-ufWarJQ6FVRk
+      Action: lambda:InvokeFunctionUrl
+      Principal: "*"
+      FunctionUrlAuthType: NONE
+
+Outputs:
+  Status:
+    Description: 'Permission Fix Status'
+    Value: 'Lambda function URL permissions updated for public access'
+  
+  FunctionUrl:
+    Description: 'Lambda Function URL (should now work)'
+    Value: 'https://53x75wmois5qtdv2gfc4sn3btzubrivqx.lambda-url.us-east-1.on.aws/'

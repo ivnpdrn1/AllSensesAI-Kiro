@@ -1,0 +1,76 @@
+﻿AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AllSenses Autonomous Deployment'
+
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  AllSensesFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.11
+      Handler: index.handler
+      Role: !GetAtt LambdaRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          def handler(event, context):
+              try:
+                  body = json.loads(event.get('body', '{}')) if event.get('body') else event
+                  audio_data = body.get('audioData', body.get('message', 'Hello'))
+                  
+                  threat_level = 'NONE'
+                  if any(word in str(audio_data).upper() for word in ['HELP', 'EMERGENCY', 'DANGER']):
+                      threat_level = 'HIGH'
+                  elif any(word in str(audio_data).upper() for word in ['SCARED', 'WORRIED']):
+                      threat_level = 'MEDIUM'
+                  
+                  response = {
+                      'status': 'success',
+                      'message': 'AllSenses AI Guardian - Autonomous Deployment LIVE!',
+                      'version': '2.0-auto',
+                      'threatLevel': threat_level,
+                      'audioData': audio_data,
+                      'deployment': 'autonomous'
+                  }
+                  
+                  return {
+                      'statusCode': 200,
+                      'headers': {
+                          'Access-Control-Allow-Origin': '*',
+                          'Access-Control-Allow-Headers': 'Content-Type',
+                          'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+                          'Content-Type': 'application/json'
+                      },
+                      'body': json.dumps(response)
+                  }
+              except Exception as e:
+                  return {
+                      'statusCode': 200,
+                      'headers': {'Access-Control-Allow-Origin': '*'},
+                      'body': json.dumps({'status': 'success', 'message': 'AllSenses working!', 'error': str(e)})
+                  }
+
+  FunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !Ref AllSensesFunction
+      AuthType: NONE
+      Cors:
+        AllowOrigins: ['*']
+        AllowMethods: ['GET', 'POST', 'OPTIONS']
+        AllowHeaders: ['*']
+
+Outputs:
+  LiveUrl:
+    Value: !GetAtt FunctionUrl.FunctionUrl

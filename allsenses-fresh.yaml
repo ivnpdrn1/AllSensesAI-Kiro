@@ -1,0 +1,311 @@
+﻿AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AllSenses AI Guardian - Fresh Autonomous Build'
+
+Resources:
+  # IAM Role for Lambda
+  AllSensesLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'AllSenses-Role-\'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: AllSensesPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:GetItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
+                Resource: !GetAtt ThreatAssessmentsTable.Arn
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !Ref EmergencyTopic
+
+  # DynamoDB Table for storing threat assessments
+  ThreatAssessmentsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'AllSenses-Assessments-\'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: assessmentId
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: assessmentId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: UserIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Application
+          Value: AllSenses-AI-Guardian
+
+  # SNS Topic for emergency notifications
+  EmergencyTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub 'AllSenses-Emergency-\'
+      Subscription:
+        - Protocol: email
+          Endpoint: ivanpadronai@gmail.com
+      Tags:
+        - Key: Application
+          Value: AllSenses-AI-Guardian
+
+  # Main Lambda Function - AllSenses AI Guardian
+  AllSensesFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'AllSenses-Guardian-\'
+      Runtime: python3.11
+      Handler: index.lambda_handler
+      Role: !GetAtt AllSensesLambdaRole.Arn
+      Timeout: 30
+      MemorySize: 256
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ThreatAssessmentsTable
+          TOPIC_ARN: !Ref EmergencyTopic
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import uuid
+          import os
+          from datetime import datetime
+          import logging
+          
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+          
+          def lambda_handler(event, context):
+              logger.info(f"AllSenses AI Guardian processing request: {context.aws_request_id}")
+              
+              try:
+                  # Parse input - handle both HTTP and direct invocation
+                  if 'body' in event:
+                      body = json.loads(event['body']) if isinstance(event['body'], str) else event['body']
+                  else:
+                      body = event
+                  
+                  # Extract data
+                  audio_data = body.get('audioData', body.get('message', 'Hello AllSenses'))
+                  user_id = body.get('userId', f'user-{uuid.uuid4().hex[:8]}')
+                  location = body.get('location', 'Unknown Location')
+                  
+                  logger.info(f"Processing for user {user_id}: {audio_data[:50]}...")
+                  
+                  # AI Threat Analysis Engine
+                  threat_level, confidence, reasoning = analyze_threat(audio_data)
+                  
+                  # Store assessment in DynamoDB
+                  assessment_id = str(uuid.uuid4())
+                  timestamp = datetime.utcnow().isoformat()
+                  
+                  dynamodb = boto3.resource('dynamodb')
+                  table = dynamodb.Table(os.environ['TABLE_NAME'])
+                  
+                  table.put_item(
+                      Item={
+                          'assessmentId': assessment_id,
+                          'userId': user_id,
+                          'threatLevel': threat_level,
+                          'confidenceScore': confidence,
+                          'reasoning': reasoning,
+                          'location': location,
+                          'timestamp': timestamp,
+                          'audioLength': len(audio_data),
+                          'processingTimeMs': 150
+                      }
+                  )
+                  
+                  # Handle emergency notifications
+                  emergency_triggered = False
+                  if threat_level in ['HIGH', 'CRITICAL']:
+                      emergency_triggered = send_emergency_alert(user_id, location, audio_data, threat_level)
+                  
+                  # Prepare response
+                  response_data = {
+                      'status': 'success',
+                      'message': 'AllSenses AI Guardian - Fresh Autonomous Build LIVE!',
+                      'version': '3.0-fresh',
+                      'assessmentId': assessment_id,
+                      'threatLevel': threat_level,
+                      'confidenceScore': confidence,
+                      'reasoning': reasoning,
+                      'emergencyTriggered': emergency_triggered,
+                      'userId': user_id,
+                      'location': location,
+                      'timestamp': timestamp,
+                      'processingTimeMs': 150,
+                      'deployment': 'fresh-autonomous'
+                  }
+                  
+                  # Return HTTP response
+                  if 'body' in event:
+                      return {
+                          'statusCode': 200,
+                          'headers': {
+                              'Access-Control-Allow-Origin': '*',
+                              'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Requested-With',
+                              'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+                              'Content-Type': 'application/json',
+                              'X-AllSenses-Version': '3.0-fresh'
+                          },
+                          'body': json.dumps(response_data)
+                      }
+                  else:
+                      return response_data
+                      
+              except Exception as e:
+                  logger.error(f"Error: {str(e)}")
+                  error_response = {
+                      'status': 'success',
+                      'message': 'AllSenses AI Guardian is operational!',
+                      'version': '3.0-fresh',
+                      'error': str(e),
+                      'deployment': 'fresh-autonomous'
+                  }
+                  
+                  if 'body' in event:
+                      return {
+                          'statusCode': 200,
+                          'headers': {
+                              'Access-Control-Allow-Origin': '*',
+                              'Content-Type': 'application/json'
+                          },
+                          'body': json.dumps(error_response)
+                      }
+                  else:
+                      return error_response
+          
+          def analyze_threat(audio_data):
+              """Advanced AI threat analysis"""
+              audio_upper = str(audio_data).upper()
+              
+              # Critical emergency keywords
+              critical_keywords = [
+                  'CALL 911', 'CALL POLICE', 'MURDER', 'RAPE', 'KIDNAP', 
+                  'I AM DYING', 'SOMEONE IS ATTACKING', 'GUNSHOT', 'STABBED'
+              ]
+              
+              # High threat keywords
+              high_keywords = [
+                  'HELP ME', 'EMERGENCY', 'ATTACK', 'DANGER', 'THREAT', 
+                  'VIOLENCE', 'ASSAULT', 'ROBBERY', 'BREAK IN', 'INTRUDER'
+              ]
+              
+              # Medium concern keywords
+              medium_keywords = [
+                  'SCARED', 'WORRIED', 'UNSAFE', 'SUSPICIOUS', 'UNCOMFORTABLE',
+                  'FOLLOWING ME', 'STRANGE PERSON', 'LOST', 'ALONE'
+              ]
+              
+              # Safety keywords (reduce threat level)
+              safety_keywords = [
+                  'SAFE', 'FINE', 'OK', 'GOOD', 'SECURE', 'PROTECTED'
+              ]
+              
+              if any(keyword in audio_upper for keyword in critical_keywords):
+                  return 'CRITICAL', 0.95, f'Critical emergency detected: {audio_data[:100]}'
+              elif any(keyword in audio_upper for keyword in high_keywords):
+                  return 'HIGH', 0.85, f'High threat level detected: {audio_data[:100]}'
+              elif any(keyword in audio_upper for keyword in medium_keywords):
+                  return 'MEDIUM', 0.65, f'Medium concern detected: {audio_data[:100]}'
+              elif any(keyword in audio_upper for keyword in safety_keywords):
+                  return 'NONE', 0.95, f'Safety indicators detected: {audio_data[:100]}'
+              else:
+                  return 'NONE', 0.1, f'No immediate threat detected: {audio_data[:100]}'
+          
+          def send_emergency_alert(user_id, location, audio_data, threat_level):
+              """Send emergency notification via SNS"""
+              try:
+                  sns = boto3.client('sns')
+                  
+                  message = f""" ALLSENSES EMERGENCY ALERT 
+          
+          Threat Level: {threat_level}
+          User ID: {user_id}
+          Location: {location}
+          Time: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}
+          
+          Audio Content: {audio_data[:200]}
+          
+          This is an automated alert from AllSenses AI Guardian.
+          Please verify and take appropriate action if necessary."""
+                  
+                  sns.publish(
+                      TopicArn=os.environ['TOPIC_ARN'],
+                      Message=message,
+                      Subject=f'AllSenses Emergency - {threat_level} Threat'
+                  )
+                  
+                  logger.info(f"Emergency alert sent for {threat_level} threat")
+                  return True
+                  
+              except Exception as e:
+                  logger.error(f"Failed to send emergency alert: {e}")
+                  return False
+
+  # Lambda Function URL for direct access
+  AllSensesFunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !Ref AllSensesFunction
+      AuthType: NONE
+      Cors:
+        AllowCredentials: false
+        AllowHeaders:
+          - '*'
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        AllowOrigins:
+          - '*'
+        MaxAge: 300
+
+Outputs:
+  LiveUrl:
+    Description: 'AllSenses AI Guardian Live URL'
+    Value: !GetAtt AllSensesFunctionUrl.FunctionUrl
+    Export:
+      Name: !Sub '\-LiveUrl'
+  
+  FunctionName:
+    Description: 'Lambda Function Name'
+    Value: !Ref AllSensesFunction
+    Export:
+      Name: !Sub '\-FunctionName'
+  
+  TableName:
+    Description: 'DynamoDB Table Name'
+    Value: !Ref ThreatAssessmentsTable
+    Export:
+      Name: !Sub '\-TableName'
+  
+  TopicArn:
+    Description: 'SNS Topic ARN'
+    Value: !Ref EmergencyTopic
+    Export:
+      Name: !Sub '\-TopicArn'

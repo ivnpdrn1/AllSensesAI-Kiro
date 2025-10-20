@@ -1,0 +1,5 @@
+﻿{
+  "action": "MAKE_REAL_CALL",
+  "phoneNumber": "+15551234567",
+  "emergencyMessage": "AllSensesAI Test - SMS Dispatch Validation"
+}
