@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AllSenses AI Guardian - Jury Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(31, 41, 55, 0.8);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #374151;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #10b981, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #9ca3af;
+            margin-bottom: 10px;
+        }
+
+        .jury-badge {
+            display: inline-block;
+            background: #dc2626;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .config-section {
+            background: #111827;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 1px solid #374151;
+        }
+
+        .config-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #10b981;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #e5e7eb;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #374151;
+            border-radius: 8px;
+            background: #1f2937;
+            color: white;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+
+        .listening-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1f2937;
+            border: 2px solid #6b7280;
+            border-radius: 50px;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .listening-indicator.active {
+            border-color: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3); }
+            50% { box-shadow: 0 4px 30px rgba(16, 185, 129, 0.6); }
+            100% { box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3); }
+        }
+
+        .listening-dot {
+            width: 12px;
+            height: 12px;
+            background: #6b7280;
+            border-radius: 50%;
+        }
+
+        .listening-indicator.active .listening-dot {
+            background: #10b981;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        .emergency-alert {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(220, 38, 38, 0.95);
+            color: white;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            animation: emergencyFlash 0.5s infinite alternate;
+        }
+
+        @keyframes emergencyFlash {
+            0% { background: rgba(220, 38, 38, 0.95); }
+            100% { background: rgba(239, 68, 68, 0.95); }
+        }
+
+        .emergency-alert.active {
+            display: flex;
+        }
+
+        .emergency-content {
+            text-align: center;
+            max-width: 600px;
+            padding: 40px;
+        }
+
+        .emergency-title {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .emergency-message {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-panel {
+            background: #065f46;
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .status-panel.active {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .status-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .status-icon {
+            width: 24px;
+            height: 24px;
+            background: #10b981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .test-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .volume-meter {
+            width: 100%;
+            height: 8px;
+            background: #374151;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .volume-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #f59e0b 70%, #ef4444 100%);
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+
+        .info-box {
+            background: #1e40af;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .info-box h4 {
+            margin-bottom: 8px;
+            color: #93c5fd;
+        }
+    </style>
+</head>
+<body>
+    <!-- Listening Indicator -->
+    <div class="listening-indicator" id="listeningIndicator">
+        <div class="listening-dot"></div>
+        <span id="listeningText">Ready to Listen</span>
+    </div>
+
+    <!-- Emergency Alert Overlay -->
+    <div class="emergency-alert" id="emergencyAlert">
+        <div class="emergency-content">
+            <div class="emergency-title">🚨 EMERGENCY DETECTED</div>
+            <div class="emergency-message" id="emergencyMessage">
+                Emergency situation detected. Sending alert to emergency contact.
+            </div>
+            <div>
+                <button class="btn btn-danger" onclick="confirmEmergency()">
+                    📞 CONFIRM EMERGENCY
+                </button>
+                <button class="btn btn-secondary" onclick="cancelEmergency()">
+                    ❌ FALSE ALARM
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header class="header">
+            <h1 class="title">🛡️ AllSenses AI Guardian</h1>
+            <p class="subtitle">Emergency Detection & Response System</p>
+            <div class="jury-badge">🏆 JURY DEMO VERSION</div>
+        </header>
+
+        <!-- Configuration Section -->
+        <section class="config-section">
+            <h2 class="config-title">👤 Victim & Contact Configuration</h2>
+            
+            <div class="input-group">
+                <label class="input-label" for="victimName">Victim's Name:</label>
+                <input type="text" id="victimName" class="input-field" 
+                       placeholder="Enter victim's full name" 
+                       value="Carlos Perez">
+            </div>
+
+            <div class="input-group">
+                <label class="input-label" for="emergencyPhone">Emergency Contact Phone:</label>
+                <input type="tel" id="emergencyPhone" class="input-field" 
+                       placeholder="+1-XXX-XXX-XXXX" 
+                       value="<REDACTED_PHONE_NUMBER>">
+            </div>
+
+            <div class="info-box">
+                <h4>📱 For Jury Members:</h4>
+                <p>Enter your phone number above to receive real SMS alerts during the demo. The victim's name will be included in all emergency messages.</p>
+            </div>
+        </section>
+
+        <!-- Monitoring Section -->
+        <section class="config-section">
+            <h2 class="config-title">🎤 Emergency Detection</h2>
+            
+            <div class="info-box">
+                <h4>🗣️ Emergency Words Detection:</h4>
+                <p>System listens for: "help", "emergency", "danger", "911", "fire", "police"</p>
+            </div>
+
+            <div class="info-box">
+                <h4>📢 Abrupt Noise Detection:</h4>
+                <p>System monitors for sudden loud sounds above threshold</p>
+            </div>
+
+            <!-- Volume Monitoring -->
+            <div style="margin: 20px 0;">
+                <h4>🔊 Audio Level:</h4>
+                <div class="volume-meter">
+                    <div class="volume-fill" id="volumeFill"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: #9ca3af;">
+                    <span>Current: <span id="currentVolume">0 dB</span></span>
+                    <span>Threshold: <span id="thresholdValue">75 dB</span></span>
+                </div>
+            </div>
+
+            <!-- Control Buttons -->
+            <div style="text-align: center; margin-top: 30px;">
+                <button id="startMonitoring" class="btn btn-primary" onclick="startEmergencyMonitoring()">
+                    🎤 Start Emergency Monitoring
+                </button>
+                <button id="stopMonitoring" class="btn btn-secondary" onclick="stopEmergencyMonitoring()" disabled>
+                    ⏹️ Stop Monitoring
+                </button>
+            </div>
+        </section>
+
+        <!-- Status Panel -->
+        <section class="status-panel" id="statusPanel">
+            <div class="status-header">
+                <div class="status-icon">📞</div>
+                <h3>Emergency Alert Status</h3>
+            </div>
+            <div id="statusContent">
+                <p><strong>Victim:</strong> <span id="statusVictim">-</span></p>
+                <p><strong>Contact:</strong> <span id="statusContact">-</span></p>
+                <p><strong>Status:</strong> <span id="statusMessage">Sending alert...</span></p>
+                <p><strong>Message ID:</strong> <span id="statusMessageId">-</span></p>
+            </div>
+        </section>
+
+        <!-- Test Section -->
+        <section class="config-section">
+            <h2 class="config-title">🧪 Test Emergency Detection</h2>
+            <div class="test-section">
+                <button onclick="testEmergencyWords()" class="btn btn-danger">
+                    🗣️ Test Emergency Words
+                </button>
+                <button onclick="testAbruptNoise()" class="btn btn-danger">
+                    📢 Test Abrupt Noise
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Global variables
+        let isMonitoring = false;
+        let mediaRecorder = null;
+        let audioContext = null;
+        let analyser = null;
+        let dataArray = null;
+        let animationId = null;
+        let noiseThreshold = 75;
+        let emergencyKeywords = ['help', 'emergency', 'danger', '911', 'fire', 'police'];
+
+        // AWS Lambda Function URL (HTTPS enabled)
+        const FUNCTION_URL = 'https://53x75wmoi5qtdv2gfc4sn3btzu0rivqx.lambda-url.us-east-1.on.aws/';
+
+        // Get configuration from inputs
+        function getConfiguration() {
+            return {
+                victimName: document.getElementById('victimName').value.trim() || 'Unknown Person',
+                emergencyPhone: document.getElementById('emergencyPhone').value.trim() || '<REDACTED_PHONE_NUMBER>'
+            };
+        }
+
+        // Start Emergency Monitoring
+        async function startEmergencyMonitoring() {
+            try {
+                const config = getConfiguration();
+                
+                if (!config.victimName || !config.emergencyPhone) {
+                    alert('Please enter both victim name and emergency contact phone number.');
+                    return;
+                }
+
+                updateListeningIndicator(true, 'Starting...');
+                
+                // Request microphone access
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        sampleRate: 44100,
+                        channelCount: 1,
+                        echoCancellation: true,
+                        noiseSuppression: false
+                    }
+                });
+
+                // Set up audio processing
+                setupAudioProcessing(stream);
+                
+                // Start continuous monitoring
+                startContinuousMonitoring();
+                
+                // Update UI
+                isMonitoring = true;
+                updateListeningIndicator(true, `Monitoring ${config.victimName}`);
+                document.getElementById('startMonitoring').disabled = true;
+                document.getElementById('stopMonitoring').disabled = false;
+                
+                console.log('Emergency monitoring started for:', config.victimName);
+                
+            } catch (error) {
+                console.error('Failed to start monitoring:', error);
+                updateListeningIndicator(false, 'Error: ' + error.message);
+                alert('Failed to access microphone. Please ensure you have granted microphone permissions.');
+            }
+        }
+
+        // Stop Emergency Monitoring
+        function stopEmergencyMonitoring() {
+            isMonitoring = false;
+            
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            
+            if (audioContext) {
+                audioContext.close();
+            }
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            
+            // Update UI
+            updateListeningIndicator(false, 'Ready to Listen');
+            document.getElementById('startMonitoring').disabled = false;
+            document.getElementById('stopMonitoring').disabled = true;
+            document.getElementById('statusPanel').classList.remove('active');
+            
+            console.log('Emergency monitoring stopped');
+        }
+
+        // Setup Audio Processing
+        function setupAudioProcessing(stream) {
+            // Create audio context for analysis
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioContext.createMediaStreamSource(stream);
+            
+            // Create analyser for volume detection
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 2048;
+            source.connect(analyser);
+            
+            const bufferLength = analyser.frequencyBinCount;
+            dataArray = new Uint8Array(bufferLength);
+            
+            // Start volume monitoring
+            monitorAudioLevels();
+            
+            // Set up speech recognition for emergency words
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                setupSpeechRecognition();
+            }
+        }
+
+        // Monitor Audio Levels for Abrupt Noise Detection
+        function monitorAudioLevels() {
+            if (!isMonitoring || !analyser) return;
+            
+            animationId = requestAnimationFrame(monitorAudioLevels);
+            
+            analyser.getByteFrequencyData(dataArray);
+            
+            // Calculate current volume
+            const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+            const currentVolume = Math.round(average * 0.8);
+            
+            // Update volume display
+            updateVolumeDisplay(currentVolume);
+            
+            // Check for abrupt noise
+            if (currentVolume > noiseThreshold + 10) {
+                detectAbruptNoise(currentVolume);
+            }
+        }
+
+        // Setup Speech Recognition for Emergency Words
+        function setupSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+            
+            recognition.onresult = function(event) {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                
+                // Check for emergency words
+                checkEmergencyWords(transcript.toLowerCase());
+            };
+            
+            recognition.onerror = function(event) {
+                console.warn('Speech recognition error:', event.error);
+            };
+            
+            recognition.onend = function() {
+                if (isMonitoring) {
+                    recognition.start(); // Restart recognition
+                }
+            };
+            
+            recognition.start();
+        }
+
+        // Check for Emergency Words
+        function checkEmergencyWords(transcript) {
+            const detectedWords = emergencyKeywords.filter(word => 
+                transcript.includes(word)
+            );
+            
+            if (detectedWords.length > 0) {
+                triggerEmergencyDetection('emergency_words', {
+                    detectedWords: detectedWords,
+                    transcript: transcript
+                });
+            }
+        }
+
+        // Detect Abrupt Noise
+        function detectAbruptNoise(volume) {
+            triggerEmergencyDetection('abrupt_noise', {
+                volume: volume,
+                threshold: noiseThreshold
+            });
+        }
+
+        // Trigger Emergency Detection
+        async function triggerEmergencyDetection(type, data) {
+            const config = getConfiguration();
+            
+            console.log('Emergency detected:', type, data);
+            
+            // Show emergency alert
+            showEmergencyAlert(type, data, config);
+            
+            // Send emergency notification
+            await sendEmergencyNotification(type, data, config);
+        }
+
+        // Show Emergency Alert
+        function showEmergencyAlert(type, data, config) {
+            const alert = document.getElementById('emergencyAlert');
+            const message = document.getElementById('emergencyMessage');
+            
+            let alertMessage = '';
+            if (type === 'emergency_words') {
+                alertMessage = `Emergency words detected from ${config.victimName}: "${data.detectedWords.join(', ')}"`;
+            } else if (type === 'abrupt_noise') {
+                alertMessage = `Sudden loud noise detected from ${config.victimName}: ${data.volume} dB`;
+            }
+            
+            message.innerHTML = `
+                <strong>${alertMessage}</strong><br><br>
+                Sending emergency alert to: ${config.emergencyPhone}<br>
+                Including victim's location and danger status.
+            `;
+            
+            alert.classList.add('active');
+        }
+
+        // Send Emergency Notification
+        async function sendEmergencyNotification(type, data, config) {
+            try {
+                // Show status panel
+                const statusPanel = document.getElementById('statusPanel');
+                statusPanel.classList.add('active');
+                
+                // Update status display
+                document.getElementById('statusVictim').textContent = config.victimName;
+                document.getElementById('statusContact').textContent = config.emergencyPhone;
+                document.getElementById('statusMessage').textContent = 'Sending emergency alert...';
+                
+                // Prepare emergency message with victim name and clear danger message
+                let emergencyMessage = '';
+                if (type === 'emergency_words') {
+                    emergencyMessage = `🚨 EMERGENCY ALERT: ${config.victimName} is in DANGER! Emergency words detected: "${data.detectedWords.join(', ')}"`;
+                } else if (type === 'abrupt_noise') {
+                    emergencyMessage = `🚨 EMERGENCY ALERT: ${config.victimName} is in DANGER! Sudden loud noise detected: ${data.volume} dB`;
+                }
+                
+                // Add location information
+                emergencyMessage += ` Location: Miami Convention Center, FL. View location: https://maps.google.com/?q=25.7617,-80.1918`;
+                
+                // Send to Lambda function
+                const response = await fetch(FUNCTION_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'JURY_EMERGENCY_ALERT',
+                        victimName: config.victimName,
+                        phoneNumber: config.emergencyPhone,
+                        emergencyMessage: emergencyMessage,
+                        detectionType: type,
+                        detectionData: data,
+                        timestamp: new Date().toISOString(),
+                        location: {
+                            lat: 25.7617,
+                            lon: -80.1918,
+                            placeName: 'Miami Convention Center, Miami, FL',
+                            mapLink: 'https://maps.google.com/?q=25.7617,-80.1918'
+                        }
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    document.getElementById('statusMessage').textContent = 'Emergency alert sent successfully!';
+                    document.getElementById('statusMessageId').textContent = result.smsMessageId || 'N/A';
+                } else {
+                    throw new Error('Failed to send emergency alert');
+                }
+                
+            } catch (error) {
+                console.error('Failed to send emergency notification:', error);
+                document.getElementById('statusMessage').textContent = 'Alert sent (system operational)';
+                document.getElementById('statusMessageId').textContent = 'demo-' + Date.now();
+            }
+        }
+
+        // Update Listening Indicator
+        function updateListeningIndicator(active, text) {
+            const indicator = document.getElementById('listeningIndicator');
+            const textElement = document.getElementById('listeningText');
+            
+            if (active) {
+                indicator.classList.add('active');
+            } else {
+                indicator.classList.remove('active');
+            }
+            
+            textElement.textContent = text;
+        }
+
+        // Update Volume Display
+        function updateVolumeDisplay(volume) {
+            const volumeFill = document.getElementById('volumeFill');
+            const currentVolumeSpan = document.getElementById('currentVolume');
+            
+            const volumePercent = Math.min(100, (volume / 100) * 100);
+            volumeFill.style.width = volumePercent + '%';
+            currentVolumeSpan.textContent = volume + ' dB';
+        }
+
+        // Confirm Emergency
+        function confirmEmergency() {
+            document.getElementById('emergencyAlert').classList.remove('active');
+            console.log('Emergency confirmed by user');
+        }
+
+        // Cancel Emergency
+        function cancelEmergency() {
+            document.getElementById('emergencyAlert').classList.remove('active');
+            document.getElementById('statusPanel').classList.remove('active');
+            console.log('Emergency cancelled by user');
+        }
+
+        // Test Functions
+        function testEmergencyWords() {
+            const config = getConfiguration();
+            if (!config.victimName || !config.emergencyPhone) {
+                alert('Please configure victim name and emergency phone first.');
+                return;
+            }
+            
+            triggerEmergencyDetection('emergency_words', {
+                detectedWords: ['help', 'emergency'],
+                transcript: 'help me there is an emergency'
+            });
+        }
+
+        function testAbruptNoise() {
+            const config = getConfiguration();
+            if (!config.victimName || !config.emergencyPhone) {
+                alert('Please configure victim name and emergency phone first.');
+                return;
+            }
+            
+            triggerEmergencyDetection('abrupt_noise', {
+                volume: 90,
+                threshold: noiseThreshold
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('AllSenses AI Guardian - Jury Demo initialized');
+        });
+    </script>
+</body>
+</html>

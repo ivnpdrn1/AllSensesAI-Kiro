@@ -1,0 +1,41 @@
+{
+  "CallerReference": "allsenses-https-demo-2025-10-16",
+  "Comment": "AllSenses HTTPS Demo for Hackathon Jury",
+  "DefaultRootObject": "mvp1-complete-demo.html",
+  "Origins": {
+    "Quantity": 1,
+    "Items": [
+      {
+        "Id": "S3-allsenses-mvp1-demo-website",
+        "DomainName": "allsenses-mvp1-demo-website.s3-website-us-east-1.amazonaws.com",
+        "CustomOriginConfig": {
+          "HTTPPort": 80,
+          "HTTPSPort": 443,
+          "OriginProtocolPolicy": "http-only"
+        }
+      }
+    ]
+  },
+  "DefaultCacheBehavior": {
+    "TargetOriginId": "S3-allsenses-mvp1-demo-website",
+    "ViewerProtocolPolicy": "redirect-to-https",
+    "AllowedMethods": {
+      "Quantity": 7,
+      "Items": ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"],
+      "CachedMethods": {
+        "Quantity": 2,
+        "Items": ["GET", "HEAD"]
+      }
+    },
+    "ForwardedValues": {
+      "QueryString": false,
+      "Cookies": {
+        "Forward": "none"
+      }
+    },
+    "Compress": true,
+    "MinTTL": 0
+  },
+  "Enabled": true,
+  "PriceClass": "PriceClass_100"
+}

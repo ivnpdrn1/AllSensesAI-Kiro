@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AllSenses Emergency Audio Evidence</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .emergency-alert {
+            background: rgba(231, 76, 60, 0.2);
+            border: 2px solid #e74c3c;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.7; }
+        }
+        .evidence-details {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .audio-player {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚨 AllSenses Emergency Evidence</h1>
+        
+        <div class="emergency-alert">
+            <h2>EMERGENCY DETECTED</h2>
+            <p><strong>Threat Level:</strong> HIGH</p>
+            <p><strong>Confidence:</strong> 95%</p>
+            <p><strong>Status:</strong> Evidence Preserved</p>
+        </div>
+        
+        <div class="evidence-details">
+            <h3>📋 Incident Details</h3>
+            <p><strong>Incident ID:</strong> incident-emergency-demo</p>
+            <p><strong>Timestamp:</strong> 2024-10-14 23:09:18 UTC</p>
+            <p><strong>Location:</strong> Demo Location (40.7128, -74.0060)</p>
+            <p><strong>User ID:</strong> hackathon-demo</p>
+            <p><strong>Detection Method:</strong> AWS Bedrock Claude 3.5 Sonnet</p>
+        </div>
+        
+        <div class="audio-player">
+            <h3>🎵 Audio Evidence</h3>
+            <p><strong>Transcript:</strong> "HELP! There is an emergency situation here! I need immediate assistance!"</p>
+            <p><em>Audio evidence has been securely stored with AES-256 encryption in Amazon S3.</em></p>
+            <p><strong>Evidence URL:</strong> <a href="https://allsenses-audio-evidence-794289527784.s3.amazonaws.com/evidence/2024/10/14/incident-emergency-demo.txt" target="_blank" style="color: #4ecdc4;">View Evidence</a></p>
+        </div>
+        
+        <div class="evidence-details">
+            <h3>🔐 Security & Compliance</h3>
+            <p>✅ <strong>Encrypted Storage:</strong> AES-256 encryption at rest</p>
+            <p>✅ <strong>Access Control:</strong> IAM-based permissions</p>
+            <p>✅ <strong>Audit Trail:</strong> CloudTrail logging enabled</p>
+            <p>✅ <strong>Retention Policy:</strong> 7-year legal compliance</p>
+            <p>✅ <strong>Chain of Custody:</strong> Immutable timestamps</p>
+        </div>
+        
+        <div class="emergency-alert">
+            <h3>📞 Emergency Response Activated</h3>
+            <p>✅ SNS Alert Sent</p>
+            <p>✅ Emergency Contact Notified</p>
+            <p>✅ Step Functions Workflow Executed</p>
+            <p>✅ Incident Logged in DynamoDB</p>
+        </div>
+        
+        <p><em>This evidence page demonstrates AllSenses AI Guardian's complete emergency response and evidence preservation system using AWS services.</em></p>
+    </div>
+</body>
+</html>
