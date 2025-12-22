@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERNIE AI Developer Challenge - AllSensesAI Guardian</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin: 10px 5px;
+            font-size: 0.9rem;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .demo-panel {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+        }
+        
+        .demo-panel h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .scenario-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .scenario-btn {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+        
+        .scenario-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+        
+        .scenario-btn.active {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .scenario-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .scenario-desc {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .analyze-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .results-panel {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .result-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .threat-level {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .threat-low { background: #d4edda; color: #155724; }
+        .threat-medium { background: #fff3cd; color: #856404; }
+        .threat-high { background: #f8d7da; color: #721c24; }
+        
+        .confidence-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 8px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #ffc107, #dc3545);
+            transition: width 0.5s ease;
+        }
+        
+        .reasoning-list {
+            list-style: none;
+            margin: 15px 0;
+        }
+        
+        .reasoning-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+            color: #495057;
+        }
+        
+        .reasoning-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .ernie-info {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .ernie-info h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        
+        .json-output {
+            background: #2d3748;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+        
+        .system-status {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 ERNIE AI Developer Challenge</h1>
+            <p>AllSensesAI Guardian - Multi-Signal Emergency Threat Detection</p>
+            
+            <div style="margin-top:10px; display:flex; justify-content:center;">
+                {% if demo_mode %}
+                <div style="padding:6px 12px; border-radius:999px; font-weight:600; font-size:12px; background:#FFE8C2;">
+                    Demo Mode (Mock ERNIE) — {{ ernie_model }}
+                </div>
+                {% else %}
+                <div style="padding:6px 12px; border-radius:999px; font-weight:600; font-size:12px; background:#D8FFE0;">
+                    Live ERNIE Mode — {{ ernie_model }}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div>
+                <span class="badge">🧠 ERNIE 4.5 Turbo</span>
+                <span class="badge">🔍 Multi-Signal Reasoning</span>
+                <span class="badge">⚡ Real-Time Analysis</span>
+                <span class="badge">🛡️ Emergency Response</span>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="demo-panel">
+                <h2>🎯 Demo Scenarios</h2>
+                <p style="color: #6c757d; margin-bottom: 20px;">
+                    Select a scenario to test ERNIE's multi-signal threat analysis capabilities:
+                </p>
+                
+                <div class="scenario-buttons" id="scenarioButtons">
+                    <!-- Scenarios loaded dynamically -->
+                </div>
+                
+                <button class="analyze-btn" id="analyzeBtn" onclick="analyzeScenario()" disabled>
+                    🔍 Analyze with ERNIE
+                </button>
+            </div>
+            
+            <div class="results-panel">
+                <h2>📊 Analysis Results</h2>
+                <div id="resultsContent">
+                    <div style="text-align: center; padding: 40px; color: #6c757d;">
+                        <p>Select a scenario and click "Analyze with ERNIE" to see the multi-signal threat assessment.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedScenario = null;
+        let scenarios = [];
+        
+        // Load demo scenarios on page load
+        async function loadScenarios() {
+            try {
+                const response = await fetch('/api/scenarios');
+                const data = await response.json();
+                scenarios = data.scenarios;
+                renderScenarios();
+            } catch (error) {
+                console.error('Failed to load scenarios:', error);
+                document.getElementById('scenarioButtons').innerHTML = 
+                    '<p style="color: #dc3545;">Failed to load demo scenarios</p>';
+            }
+        }
+        
+        function renderScenarios() {
+            const container = document.getElementById('scenarioButtons');
+            container.innerHTML = scenarios.map((scenario, index) => `
+                <div class="scenario-btn" onclick="selectScenario(${index})">
+                    <div class="scenario-name">${scenario.name}</div>
+                    <div class="scenario-desc">${scenario.description}</div>
+                </div>
+            `).join('');
+        }
+        
+        function selectScenario(index) {
+            // Update UI
+            document.querySelectorAll('.scenario-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', i === index);
+            });
+            
+            selectedScenario = scenarios[index];
+            document.getElementById('analyzeBtn').disabled = false;
+        }
+        
+        async function analyzeScenario() {
+            if (!selectedScenario) return;
+            
+            const resultsContent = document.getElementById('resultsContent');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            
+            // Show loading state
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = '🔄 Analyzing...';
+            
+            resultsContent.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>ERNIE is analyzing multi-signal context...</p>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        scenario_name: selectedScenario.name,
+                        audio_transcript: selectedScenario.audio_transcript,
+                        motion_data: selectedScenario.motion_data,
+                        location_data: selectedScenario.location_data
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    renderResults(result);
+                } else {
+                    renderError(result.error || 'Analysis failed');
+                }
+                
+            } catch (error) {
+                console.error('Analysis error:', error);
+                renderError('Network error - please try again');
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = '🔍 Analyze with ERNIE';
+            }
+        }
+        
+        function renderResults(result) {
+            const assessment = result.assessment;
+            const ernieAnalysis = assessment.ernie_analysis;
+            
+            const threatLevelClass = `threat-${ernieAnalysis.threat_level}`;
+            const confidencePercent = Math.round(ernieAnalysis.confidence_score * 100);
+            
+            document.getElementById('resultsContent').innerHTML = `
+                <div class="result-card">
+                    <div class="result-header">
+                        <h3>🎯 Final Decision</h3>
+                        <span class="threat-level ${threatLevelClass}">
+                            ${ernieAnalysis.threat_level.toUpperCase()} THREAT
+                        </span>
+                    </div>
+                    
+                    <div>
+                        <strong>Action:</strong> ${assessment.final_action.replace('_', ' ').toUpperCase()}
+                    </div>
+                    
+                    <div style="margin: 15px 0;">
+                        <strong>Confidence: ${confidencePercent}%</strong>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: ${confidencePercent}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <strong>Decision Reasoning:</strong>
+                        <ul class="reasoning-list">
+                            ${assessment.decision_reasoning.map(reason => `<li>• ${reason}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="ernie-info">
+                    <h4>🤖 ERNIE Analysis Details</h4>
+                    <p><strong>Model:</strong> ${result.demo_info.ernie_model_used}</p>
+                    <p><strong>Processing Time:</strong> ${result.demo_info.processing_time_ms}</p>
+                    <p><strong>Multi-Signal Reasoning:</strong> ✅ Enabled</p>
+                    
+                    <div class="json-output">
+                        <strong>ERNIE Raw JSON Output:</strong><br>
+                        ${JSON.stringify(ernieAnalysis, null, 2)}
+                    </div>
+                </div>
+                
+                <div class="system-status">
+                    <strong>Context Summary:</strong> ${assessment.context_summary}<br>
+                    <strong>Emergency Keywords:</strong> ${assessment.emergency_keywords_detected.length > 0 ? 
+                        assessment.emergency_keywords_detected.join(', ') : 'None detected'}<br>
+                    <strong>Timestamp:</strong> ${result.timestamp}
+                </div>
+            `;
+        }
+        
+        function renderError(error) {
+            document.getElementById('resultsContent').innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #dc3545;">
+                    <h3>❌ Analysis Failed</h3>
+                    <p>${error}</p>
+                    <p style="margin-top: 15px; color: #6c757d;">
+                        Please check your AI_STUDIO_API_KEY and try again.
+                    </p>
+                </div>
+            `;
+        }
+        
+        // Initialize page
+        loadScenarios();
+    </script>
+</body>
+</html>
